@@ -1,0 +1,722 @@
+//ID  : 5130379068
+//name: Chenyuexin
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <stdlib.h>
+#include <map>
+using namespace std;
+#define ID 0 //ID
+#define NUM 1//number
+#define COM 2//compone
+
+#define NU 0 //NU for number
+#define LET 1//LET for letter
+#define OPR 2//OPR for operator
+#define CIR 3//CIR for ()
+#define SPA 4//SPA for space
+string avoid[8]={"THEN","IF","LET","PRINT","INPUT","GOTO","REM","END"};
+bool if_avoid(string str)
+{
+	for(int i=0;i<8;i++)
+	{
+		if(str==avoid[i])
+			return true;
+	}
+	return false;
+}
+int KIND(char ch)
+//define the kind of the char
+{
+	if(ch<58&&ch>47)
+		return NU;
+	else if((ch>64&&ch<91)||(ch>96&&ch<123))
+		return LET;
+	else if(ch==40||ch==41)
+		return CIR;
+	else if(ch==32)
+		return SPA;//space
+	else
+		return OPR;
+}
+string read_me="陈悦昕 5130379068\n";
+/**************************************************************/
+struct line
+//the structure for create a program using the data structure like list
+{
+	line(int num,line * prev,string value);
+	int line_num;
+	string line_value;
+	line * next;
+	line * prev;
+};
+line::line(int num,line * pre,string value)
+:line_num(num),prev(pre),line_value(value)
+{
+	if(prev!=NULL)
+	{
+	next=prev->next;
+	prev->next=this;
+	if(next!=NULL)
+	next->prev=this;
+	}
+	else
+	{
+		next=NULL;
+	}
+}
+class program
+{
+public:
+	program();
+	line begin;
+	line end;
+	void add_line(string l,int num);//the func for add an new line into the program
+	void delete_line(int num);      //the func for delete a line
+	void delete_all();				//the func for clear all
+	line * find_less(int num);		//the func for find a place to insert
+	line * find(int num);
+	void print_program();
+	int line_num;
+};
+program::program()
+:begin(-1,NULL,""),end(-1,&begin,""),line_num(0)
+{
+}
+line * program::find_less(int num)
+{
+	line *iter=begin.next;
+	while(iter->next!=NULL)
+	{
+		if(iter->line_num>num)
+			return iter->prev;
+		iter=iter->next;
+	}
+	return iter->prev;
+}
+line * program::find(int num)
+{
+	line *iter=begin.next;
+	while(iter->next!=NULL)
+	{
+		if(iter->line_num==num)
+			return iter;
+		iter=iter->next;
+	}
+	//cout<<"find return null\n";
+	return NULL;
+}
+void program::add_line(string l,int num)
+{
+	//cout<<"add_line:"<<l<<":"<<endl;
+	line * tem=find(num);
+	if(tem!=NULL)
+	{
+		if(l=="")
+		{
+			delete_line(num);
+			return;
+		}
+		tem->line_value=l;
+		return;
+	}
+	else if(l!="")
+	{
+	line_num++;
+	line * temp=new line(num,find_less(num),l);
+	}
+}
+void program::delete_line(int num)
+{
+	line * temp=find(num);
+	if(temp!=NULL)
+	{
+		(temp->prev)->next=temp->next;
+		(temp->next)->prev=temp->prev;
+		line_num--;
+		temp->~line();
+	}
+}
+void program::print_program()
+{
+	line *iter=begin.next;
+	while(iter->next!=NULL)
+	{
+		cout<<iter->line_num<<" "<<iter->line_value<<endl;
+		iter=iter->next;
+	}
+}
+void program::delete_all()
+{
+	line *iter=begin.next;
+	while(iter->next!=NULL)
+	{
+		if(iter->line_num!=-1)
+			delete_line(iter->line_num);
+		iter=iter->next;
+	}
+}
+/**************************************************************/
+/**************************************************************/
+//Tokenscanner class writen
+class Tokenscanner
+{
+public:
+	Tokenscanner(string str);
+	int num;
+	string str;
+	char nextToken();
+	string nextString();
+	string next_all();
+	void put_back(string s);
+};
+Tokenscanner::Tokenscanner(string str)
+:str(str),num(0)
+{}
+char Tokenscanner::nextToken()
+//the func to get next char
+{
+	if(num<str.size())
+	{
+		num++;
+		return str[num-1]; 	
+	}
+	else
+		return ' ';
+}
+string Tokenscanner::nextString()
+//the func to get next char
+{
+	//cout<<"get next string string: "<<str<<" num: "<<num<<endl;
+	string temp=" ";
+	string token="";
+	char tmp;
+	while(num<str.size()&&str[num]==' ')
+		num++;
+	int type;
+	if(num<str.size())
+	{
+	 type=KIND(str[num]);
+	while(num<str.size()&&KIND(str[num])==type)
+	{
+		temp[0]=str[num];
+		token+=temp;
+		num++;
+		if(num<str.size()&&KIND(str[num])==CIR)
+			break;
+	}
+	}
+	while(num<str.size()&&str[num]==' ')
+		num++;
+	//num--;
+	//cout<<"Get string :"<<token<<":"<<num<<endl;
+	return token;
+}
+string Tokenscanner::next_all()
+{
+	string temp=" ";
+	string token="";
+	char tmp;
+	while(num<str.size()&&str[num]==' ')
+		num++;
+	while(num<str.size())
+	{
+		temp[0]=str[num];
+		token+=temp;
+		num++;
+	}
+	return token;
+}
+void Tokenscanner::put_back(string s)
+// the func to put back string
+{
+	//cout<<"Put_back :"<<s<<":"<<num<<endl;
+	if(s.size()!=0)
+	{
+	num--;
+	if(num<str.size())
+	{
+	while(str[num]!=s[s.size()-1])
+		num--;
+	num++;
+	num-=s.size();
+	}
+	}
+	//cout<<"After put_back :"<<num<<":"<<endl;
+}
+
+/**************************************************************/
+class Expression
+//expression class
+{
+public:
+	Expression(){};
+	virtual int key()=0;
+	string value;
+	Expression* exp;
+	Expression* rhs;
+};
+class IdentifierExp : public Expression
+{
+public:
+	IdentifierExp(string s);
+	int key(){return ID;}
+	
+};
+IdentifierExp::IdentifierExp(string s)
+{value =s;}
+class ConstantExp : public Expression
+{
+public:
+	ConstantExp(string s);
+	int key(){return NUM;}
+};
+ConstantExp::ConstantExp(string s)
+{value =s;}
+class CompoundExp : public Expression
+{
+public:
+	CompoundExp(string s,Expression* exp,Expression* rhs);
+	int key(){return COM;}
+};
+CompoundExp::CompoundExp(string s,Expression* e,Expression* r)
+{value =s; exp=e; rhs=r;}
+/**************************************************************/
+map<string,int> IDTABLE;//the ID - value map
+program prog;
+
+bool IF_NUM(string str)
+{
+	bool res=true;
+	for(int i=0;i<str.size();i++)
+		if((str[i]<48||str[i]>57)&&str[i]!=45)
+			res=false;
+	return res;
+}
+bool IF_WORD(string str)
+{
+	bool res=true;
+	for(int i=0;i<str.size();i++)
+		if(str[i]=='('||str[i]==')')
+			res=false;
+	return res;
+}
+int precedence(string token) {
+   if (token == "=") return 1;
+   if (token == "+" || token == "-") return 2;
+   if (token == "*" || token == "/") return 3;
+   return 0;
+}
+Expression* readE(Tokenscanner * scanner, int prec);
+Expression* readT(Tokenscanner * scanner) 
+{
+   //cout<<"In readT\n";
+   string token = scanner->nextString();
+   //cout<<"In readT get token : "<<token<<"\n"; 
+   if (IF_NUM (token))	return new ConstantExp(token);
+   if (IF_WORD(token))  return new IdentifierExp(token);
+   if (token != "(") cout<<"Illegal term in expression\n";
+   Expression *exp = readE(scanner,0);
+   string next_s=scanner->nextString();
+   if ( next_s!= ")"/*&&next_s!=""*/) {
+      cout<<"Unbalanced parentheses in expression\n";
+   }
+   return exp;
+}
+Expression* readE(Tokenscanner * scanner, int prec) 
+{
+	//cout<<"in readE\n";
+   Expression *exp = readT(scanner);
+   string token;
+   while (true) {
+      token = scanner->nextString();
+	  if(token=="")
+		  break;
+      //cout<<"In readE get token : "<<token<<"\n"; 
+      int newPrec = precedence(token);
+      if (newPrec <= prec) {break;}
+      //cout<<"In readE not break";
+      Expression *rhs = readE(scanner, newPrec);
+      exp = new CompoundExp(token, exp, rhs);
+   }
+   scanner->put_back(token);
+   return exp;
+}
+/**************************************************************/
+string STANDARD_str(string str)
+{
+	string temp=str;
+	for(int i=0;i<temp.size();i++)
+	{
+		if(temp[i]>=97&&temp[i]<=122)
+			temp[i]-=32;
+	}
+	return temp;
+}
+void Print_result(Expression* print)
+{
+	if(print->key()==NUM||print->key()==ID)
+		cout<<print->value<<" ";
+	else if(print->key()==COM)
+	{
+		Print_result(print->exp);
+		Print_result(print->rhs);
+		cout<<print->value<<" ";
+	}
+	return;
+}
+int Caculate_result(Expression* print,bool* state)
+{
+	if(print->key()==NUM)
+		return atoi(print->value.c_str());
+	else if(print->key()==ID)
+		{
+			//find Identifier in IDTABLE
+			map<string,int>::iterator mapi;
+			mapi=IDTABLE.find(STANDARD_str(print->value));
+			if(mapi==IDTABLE.end())
+			{
+				//cout<<"ERROR: Identifier: "<<print->value<<" using without initialized!"<<endl;
+				cout<<"VARIABLE NOT DEFINED\n";
+				*state=false;
+				return 0;
+			}
+			else
+			{
+				return IDTABLE[STANDARD_str(print->value)];
+			}
+		}
+	else if(print->key()==COM)
+	{
+		int left=Caculate_result(print->exp,state);
+		int right=Caculate_result(print->rhs,state);
+		if(print->value=="+")
+			return left+right;
+		else if(print->value=="-")
+			return left-right;
+		else if(print->value=="*")
+			return left*right;
+		else if(print->value=="/")
+		{
+			if(right==0)
+			{
+				cout<<"DIVIDE BY ZERO\n";
+				*state=false;
+				return 0;
+			}	
+			return (int)left/(int)right;
+		}
+			
+		else
+			cout<<"ERROR: unknown operator: "<<print->value<<endl;
+		*state=false;
+	}
+	return 0;
+}
+int read_expression()
+{
+	string expr;
+	getline(cin,expr);
+	while(expr!="quit")
+		//look if the input is quit
+	{
+		//cout<<"Get value:\n";
+		Tokenscanner scanner(expr);
+		//readE(&scanner, 0);
+		//cout<<"Start creating\n";
+		Expression* exp=readE(&scanner,0);
+		//cout<<"Printing result\n";
+		Print_result(exp);cout<<endl;
+		bool state=true;
+		int ans=Caculate_result(exp,&state);
+		if(state) cout<<ans;
+		cout<<endl;
+		getline(cin,expr);
+	}
+	return 0;
+}
+int cal_expression(string expr,bool * state)
+{
+	Tokenscanner scanner(expr);
+	Expression* exp=readE(&scanner,0);
+	int ans=Caculate_result(exp,state);
+	//Print_result(exp);
+	return ans;
+}
+int input(string line)
+{
+	Tokenscanner tks(line);
+	tks.nextString();
+	if(tks.nextString()!="")
+	{
+		cout<<"to use an ' ' between a variable is not allowed\n";
+		return 0;
+	}
+	//cout<<"line:"<<line<<endl;
+	if(if_avoid(STANDARD_str(line)))
+	{
+		cout<<"Using "<<line<<" to define a identifier is not allowed\n";
+		return 0;
+	}
+	string temp="";
+	while(1)
+	{
+		temp="";
+		cout<<" ? ";
+		getline(cin,temp);
+		if(!IF_NUM(temp))
+		{
+			cout<<"INVALID NUMBER"<<endl;
+			cin.clear();cin.sync();
+			continue;
+		}
+		break;
+	}
+	IDTABLE[STANDARD_str(line)]=atoi(temp.c_str());//add it to the id table
+}
+int let(string line)
+{
+	Tokenscanner tks(line);
+	string id=tks.nextString();
+	string op=tks.nextString();
+	string expr=tks.next_all();
+	if(if_avoid(STANDARD_str(id)))
+	{
+		cout<<"Using "<<line<<" to define a identifier is not allowed\n";
+		return 0;
+	}
+	if(op!="=")
+		return 0;
+	bool state=true;
+	int value=cal_expression(expr,&state);
+	if(!state)
+	{
+		return 0;
+	}
+	IDTABLE[STANDARD_str(id)]=value;//add it to the id table
+	return 1;
+}
+int print(string line)
+{
+	bool state=true;
+	int value=cal_expression(line,&state);
+	if(!state)
+	{
+		//cout<<"ERROR in calculate expression";
+		return 0;
+	}
+	cout<<value<<endl;
+	return 1;
+}
+bool if_condition(string condition,bool *state)
+{
+	int i=0;
+	string left_exp="";
+	string right_exp="";
+	while(condition[i]!='='&&condition[i]!='>'&&condition[i]!='<')
+	{
+		left_exp+=condition[i];
+		i++;
+		if(i>=condition.size())
+		{
+			*state=false;
+			return false;
+		}
+	}
+	char op=condition[i];
+	i++;
+	for(i;i<condition.size();i++)
+		right_exp+=condition[i];
+	
+	int left=cal_expression(left_exp,state);
+	int right=cal_expression(right_exp,state);
+	if(!*state) return false;
+	if(op=='=')
+	{
+		if(left==right)
+			return true;
+		return false;
+	}
+	else if(op=='<')
+	{
+		if(left<right)
+			return true;
+		return false;
+	}
+	else if(op=='>')
+	{
+		if(left>right)
+			return true;
+		return false;
+	}
+	cout<<"ERROR IN CONDITION\n";
+}
+int run_program()
+{
+	string temp;
+	line * line_i=prog.begin.next;
+	while(line_i->next!=NULL)
+	{
+		//cout<<line_i<<endl;
+		Tokenscanner tks(line_i->line_value);
+		temp=tks.nextString();
+		if(STANDARD_str(temp)=="LET")
+		{
+			if(!let(tks.next_all())) return 0;
+		}
+		else if(STANDARD_str(temp)=="PRINT")
+		{
+			//cout<<"is print!\n";
+			if(!print(tks.next_all())) return 0;
+		}
+		else if(STANDARD_str(temp)=="INPUT")
+		{
+			if(!input(tks.next_all())) return 0;
+		}
+		else if(STANDARD_str(temp)=="GOTO")
+		{
+			string pos=tks.next_all();
+			//cout<<"pos :"<<pos<<":"<<endl;
+			if(IF_NUM(pos))
+			{
+				line_i=prog.find(atoi(pos.c_str()));
+				if(line_i==NULL)
+				{
+					cout<<"LINE NUMBER ERROR\n";
+					return 0;
+				}
+				line_i=line_i->prev;
+			}
+			else
+			{
+				cout<<"LINE NUMBER ERROR\n";
+				return 0;
+			}
+		}
+		else if(STANDARD_str(temp)=="IF")
+		{
+			string condition="";
+			temp=tks.nextString();
+			while(STANDARD_str(temp)!="THEN")
+			{
+				condition+=temp;condition+=" ";
+				temp=tks.nextString();
+			}
+			bool state=true;
+			bool if_con=if_condition(condition,&state);
+			if(!state) return 0;
+
+			if(if_con)
+			{
+				string pos=tks.next_all();
+				//cout<<"pos :"<<pos<<":"<<endl;
+				if(IF_NUM(pos))
+				{
+					line_i=prog.find(atoi(pos.c_str()))->prev;
+					if(line_i==NULL)
+					{
+					cout<<"LINE NUMBER ERROR\n";
+					return 0;
+					}	
+				}
+				else
+				{
+					cout<<"LINE NUMBER ERROR\n";
+					return 0;
+				}
+			}
+
+		}
+		else if(STANDARD_str(temp)=="REM"){}//just pass the rem line
+		else if(STANDARD_str(temp)=="END") {return 1;}
+		//if end then end
+		else
+		{
+			cout<<"Unknown command : "<<temp<<endl;
+			return 0;
+		} 
+
+		line_i=line_i->next;
+	}
+	return 1;
+}
+int read_basic(string oneline)
+{
+	Tokenscanner tks(oneline);
+	string first=tks.nextString();
+	if(IF_NUM(first))
+	{
+		prog.add_line(tks.next_all(),atoi(first.c_str()));
+		return 1;
+	}
+	else if(STANDARD_str(first)=="LET")
+	{
+		if(let(tks.next_all()))
+			return 1;
+	}
+	else if(STANDARD_str(first)=="PRINT")
+	{
+		if(print(tks.next_all()))
+			return 1;
+	}
+	else if(STANDARD_str(first)=="INPUT")
+	{
+		if(input(tks.next_all()))
+			return 1;
+	}
+	
+	return 0;
+}
+int read_command()
+{
+	string expr;
+	getline(cin,expr);
+	//cout<<expr<<endl;
+	while(STANDARD_str(expr)!="QUIT")
+		//look if the input is quit
+	{
+		if(STANDARD_str(expr)=="LIST")
+		{
+			prog.print_program();
+		}
+		else if(STANDARD_str(expr)=="CLEAR")
+		{
+			prog.delete_all();
+			IDTABLE.clear();
+		}
+		else if(STANDARD_str(expr)=="RUN")
+		{
+			run_program();
+		}
+		else if(STANDARD_str(expr)=="HELP")
+		{
+			cout<<read_me<<endl;
+		}
+		else
+			//then it must be part of the basic line
+		{
+			if(!read_basic(expr)){}
+				//cout<<"SYNTAX ERROR(COMMAND ERROR)"<<endl;
+		}
+		getline(cin,expr);
+		STANDARD_str(expr);
+	}
+	return 0;
+}
+/*void test_program()
+{
+	prog.add_line("10",10);
+	prog.add_line("20",20);
+	prog.add_line("11",10);
+	prog.add_line("11",15);
+}*/
+int main()
+{
+	//test_program();
+	//IDTABLE["a"]=100;
+	//read_expression();
+	read_command();
+	//Tokenscanner tks("10 REM test line 1");
+	//cout<<tks.nextString();
+	return 0;
+}

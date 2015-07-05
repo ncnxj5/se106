@@ -1,0 +1,134 @@
+/*
+ * File: WordLadder.cpp
+ * --------------------
+ * [TODO: fill in your name and student ID]
+ * Name: NCNXJ5
+ * Student ID: RAINUE
+ * This file is the starter project for the word ladder problem.
+ * [TODO: extend the documentation]
+ */
+#include "lexicon.h"
+#include <iostream>
+#include "queue.h"
+#include <vector>
+ using namespace std;
+
+class Tree
+{
+public:
+   Tree(string name,Tree* tp= NULL);
+   Tree* p;
+   string name;
+};
+Tree::Tree(string name,Tree* tp)
+:name(name)
+{
+   p=tp;
+}
+
+bool if_in(vector<string>* vp,string s)
+{
+   for(int i=0;i<vp->size();++i)
+   {
+      if((*vp)[i]==s)
+         return true;
+   }
+   return false;
+}
+Tree* find_path(string sour,string dest)
+{
+   //cout<<"start finding\n"<<"sour="<<sour<<"\ndest="<<dest<<"\n";
+   Lexicon english("EnglishWords.dat");
+   //Create an empty queue.
+   Queue<Tree*>queue;
+   Tree* ladder=new Tree(sour);
+   vector<string>already_been_used;
+   //Add the start word to a new ladder.
+   queue.enqueue(ladder);//Add the ladder to the queue.
+   while ((!queue.isEmpty())&&(english.size()-already_been_used.size())>2) 
+   {
+      //cout<<"in loop\n";
+      Tree* tre=queue.dequeue();//Dequeue the first ladder from the queue.
+      string last=tre->name;
+      if (last==dest) 
+         {
+            return tre;
+         }
+      for(int i=0;i<last.size();++i)
+         //each word in the lexicon of English words that differs by one letter
+         {
+            //cout<<"in loop -01 \n";
+            for(int j='a';j<='z';++j)
+            {
+               //cout<<"in loop -02 \n";
+               string temp=last;
+               temp[i]=(char)j;
+                  if(english.contains(temp))
+                  {
+                     if (!if_in(&already_been_used,temp)) //that word has not already been used in a ladder
+                     {
+                        Tree* new_path = new Tree(temp,tre);//copy the present vector
+                        already_been_used.push_back(temp);
+                        //cout<<"create"<<temp<<"\n";
+                        //Create a copy of the current ladder.
+                        //Add the new word to the end of the copy.
+                        queue.enqueue(new_path);
+                        //Add the ladder to the queue.//Add the new ladder to the end of the queue.
+                     }
+                  }
+               
+            }
+         }
+   }
+   //cout<<"finished\n";
+   return NULL;
+//Report that no word ladder exists.
+}
+int main() 
+{
+   while(1)
+   {
+	string sour="";//define the sourse and the destination as string
+	string dest="";
+   cin.clear();//initialize
+   cin.sync();
+	cout<<"Enter start word (RETURN to quit): ";
+	getline(cin,sour);//get sourse
+   if(sour=="")
+      return 0;
+	cout<<"Enter destination word: ";
+	getline(cin,dest);//get destnation
+
+   Tree* path=find_path(sour,dest);
+   vector<string> ans;
+   if(path!=NULL)
+   {
+      while(path->p!=NULL)
+      {
+         ans.push_back(path->name);
+         path=path->p;
+      }
+      ans.push_back(path->name);
+      for(int i=ans.size()-1;i>=0;--i)
+      {
+         cout<<ans[i]<<" ";
+      }
+      cout<<"\n";
+   }
+   else
+      //cout<<"Can't find the path\n";
+      cout<<"\n";
+      //cout<<"\nfinished\n";
+     
+      //foreach (string word in english) {
+         //if (word.length() == 2) {
+            //cout << word << endl;
+         //}
+      //}
+
+      //cout<<"\nfinished\n";
+   }
+      return 0;
+}
+
+

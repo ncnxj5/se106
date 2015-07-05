@@ -1,0 +1,5 @@
+name: 陈悦昕
+ID  : 5130379068
+修复bug：
+1. using space in line that will not case segmantation fault
+2. when '(' more than ')' it will alarmed

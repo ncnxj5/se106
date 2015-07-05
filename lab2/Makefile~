@@ -1,0 +1,7 @@
+PROGRAM=city
+all:
+
+	g++ -g3 -O0 -o $(PROGRAM) Citymap.cpp Citymap.h Skycraper.cpp Skycraper.h main.cpp
+
+clean:
+	rm $(PROGRAM)

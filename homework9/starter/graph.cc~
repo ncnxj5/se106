@@ -1,0 +1,152 @@
+/*
+I D :5130379068
+name:Chenyuexin
+*/
+#include "graph.h"
+#include "set.h"
+#include <string>
+#include <fstream>
+#include <sstream>
+#include "tokenscanner.h"
+using namespace std;
+
+struct Arc;
+struct Node
+{
+  Node(int n) {name[0]=n;}
+  Node() {}
+  string name=" ";
+  Set<Arc*> arcs;
+};
+struct Arc
+{
+  Arc(int s,int f,int v):value(v) {}
+  Arc() {}
+  int value;
+  Node * start;
+  Node * finish;
+};
+int main(int argc, char** argv)
+{
+  if(argc==2)
+  {
+    ifstream ifs;
+    ifs.open(argv[1]);
+    ofstream ofs;
+    ofs.open("output.txt");
+    if((!ifs)||(!ofs))
+    {
+      cout<<"Can't open files!\n";
+      return 1;
+    }
+    Graph<Node,Arc> graph;
+    int edge,node,sour,dest,value;
+    string temp;
+    getline(ifs,temp);
+    stringstream ss(temp);
+    ss>>node;
+
+    for(int i=0;i<node+1;i++)
+    {
+      string s=" ";
+      s[0]=i;
+      graph.addNode(s);
+      //add nodes to the graph
+    }
+    getline(ifs,temp);
+    stringstream ss0(temp);
+    ss0>>edge;
+    //cout<<temp<<endl<<"edge:"<<edge;
+    //cin>>temp;
+    for(int i=0;i<edge;i++)
+     {
+      //cout<<"edge:"<<edge;
+      //cout<<"i:"<<i<<endl;
+      getline(ifs,temp);
+      stringstream strings(temp);
+      strings>>sour>>dest>>value;
+      string start=" ";
+      start[0]=sour;
+      string finish=" ";
+      finish[0]=dest; 
+      graph.addArc(start,finish)->value=value;
+     }
+
+     bool found[node+1];
+     unsigned int distance[node+1];
+      //initialize the source as 0
+     distance[0]=0;
+     found[0]=false;
+     for(int i=1;i<node+1;i++)
+     {
+      distance[i]=-1;
+      found[i]=false;
+     }
+      //set the rest part MAX
+     
+     //code for testing the graph and print it out
+     /*
+     while(setV.size()>0)
+     {
+      cout<<endl<<(int)setV.first()->name[0]<<endl;
+      while(setV.first()->arcs.size()>0)
+      {
+        cout<<(int)setV.first()->arcs.first()->start->name[0]<<"  ";
+        cout<<(int)setV.first()->arcs.first()->finish->name[0]<<" |";
+        setV.first()->arcs.remove(setV.first()->arcs.first());
+      }
+      setV.remove(setV.first());
+     }
+     */
+     bool flag=false;
+     for(int i=0;i<node+1;i++)
+     {
+      //find the minest diatance in V
+      int min=0xefffffff;//initial the min as max int
+      int pos=0;
+      for(int j=0;j<node+1;j++)
+      {
+        if(distance[j]<=min&&!found[j])
+        {
+          min=distance[j];
+          pos=j;
+          flag=true;
+          //cout<<"find:"
+        }
+      }
+      if(flag)
+      {
+        found[pos]=true;
+        //mark that we have found pos node
+        string tempname=" ";
+        tempname[0]=pos;
+        Node* curr=graph.getNode(tempname);
+        while(curr->arcs.size()>0)
+        {
+          //Node* sta=curr->arcs.first()->start;
+          //Node* fin=curr->arcs.first()->finish;
+          int start=(int)curr->arcs.first()->start->name[0];
+          int finish=(int)curr->arcs.first()->finish->name[0];
+          int value=curr->arcs.first()->value;
+          if(!found[finish]&&min+value<distance[finish])
+          {
+            distance[finish]=min+value;
+          }
+          //cout<<"start:"<<start<<" finish:"<<finish<<" value:"<<value<<endl;
+          //cout<<(int)curr->arcs.first()->start->name[0]<<"  ";
+          //cout<<(int)curr->arcs.first()->finish->name[0]<<" |";
+          curr->arcs.remove(curr->arcs.first());
+        }
+      }
+      flag=false;
+     }
+     for(int i=0;i<node+1;i++)
+      cout<<distance[i]<<" ";
+  }
+  else
+  {
+  cout<<"Input ERROR!\n";
+  return 1;
+  }
+  return 0;
+}
